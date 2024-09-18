@@ -1,0 +1,71 @@
+import java.util.*;
+
+public class ShamirSecretSharing {
+
+    // Function to decode the given y value based on its base
+    private static long decodeYValue(String base, String value) {
+        int baseInt = Integer.parseInt(base); // Convert base to an integer
+        return Long.parseLong(value, baseInt); // Decode value using the given base
+    }
+
+    // Function to perform Lagrange interpolation and find the constant term
+    private static double lagrangeInterpolation(List<long[]> points, int k) {
+        double constantTerm = 0.0;
+
+        for (int i = 0; i < k; i++) {
+            long xi = points.get(i)[0]; // x value of i-th point
+            long yi = points.get(i)[1]; // y value of i-th point
+
+            double term = yi;
+
+            for (int j = 0; j < k; j++) {
+                if (i != j) {
+                    long xj = points.get(j)[0];
+                    term *= (double)(0 - xj) / (xi - xj);
+                }
+            }
+
+            constantTerm += term;
+        }
+
+        return constantTerm;
+    }
+
+    public static void main(String[] args) {
+        // Manually parse the input similar to JSON format
+        Map<String, Map<String, String>> parsedInput = new HashMap<>();
+        parsedInput.put("1", Map.of("base", "10", "value", "28735619723837"));
+        parsedInput.put("2", Map.of("base", "16", "value", "1A228867F0CA"));
+        parsedInput.put("3", Map.of("base", "12", "value", "32811A4AA0B7B"));
+        parsedInput.put("4", Map.of("base", "11", "value", "917978721331A"));
+        parsedInput.put("5", Map.of("base", "16", "value", "1A22886782E1"));
+        parsedInput.put("6", Map.of("base", "10", "value", "28735619654702"));
+        parsedInput.put("7", Map.of("base", "14", "value", "71AB5070CC4B"));
+        parsedInput.put("8", Map.of("base", "9", "value", "122662581541670"));
+        parsedInput.put("9", Map.of("base", "8", "value", "642121030037605"));
+
+        // n and k values as per the input
+        int n = 9; // Total number of roots provided
+        int k = 6; // Minimum number of points to solve the polynomial
+
+        // List to store the decoded points (x, y)
+        List<long[]> points = new ArrayList<>();
+
+        // Decoding the points
+        for (String key : parsedInput.keySet()) {
+            long x = Long.parseLong(key); // x value is the key
+            Map<String, String> pointData = parsedInput.get(key);
+            long y = decodeYValue(pointData.get("base"), pointData.get("value")); // Decode y value
+            points.add(new long[]{x, y});
+        }
+
+        // Sort the points based on x values to avoid mismatch in Lagrange interpolation
+        points.sort(Comparator.comparingLong(p -> p[0]));
+
+        // Find the constant term using Lagrange interpolation
+        double constantTerm = lagrangeInterpolation(points, k);
+
+        // Print the constant term (secret)
+        System.out.println((long) Math.round(constantTerm));
+    }
+}
